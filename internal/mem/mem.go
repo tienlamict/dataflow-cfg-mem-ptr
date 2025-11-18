@@ -1,0 +1,112 @@
+package mem
+
+import (
+	"fmt"
+	"runtime"
+)
+
+// Package mem demonstrates Go's memory management and garbage collection.
+// This relates to the Memory Management slides, demonstrating:
+// - Heap allocation
+// - Memory statistics (runtime.MemStats)
+// - Garbage collection triggering
+// - Memory reclamation after releasing references
+
+// RunMemoryDemo demonstrates memory allocation and garbage collection
+func RunMemoryDemo() {
+	fmt.Println("This demo shows Go's automatic memory management.")
+	fmt.Println("Unlike C/C++ where you manually malloc/free, Go uses GC.")
+	fmt.Println()
+	
+	// Force GC before we start to get clean baseline
+	runtime.GC()
+	runtime.GC() // Call twice to ensure cleanup
+	
+	// Print initial memory stats
+	var m1 runtime.MemStats
+	runtime.ReadMemStats(&m1)
+	fmt.Println("=== Initial Memory Stats ===")
+	printMemStats(&m1)
+	
+	// Allocate large objects
+	fmt.Println("\n\n=== Allocating Memory ===")
+	const numObjects = 1000
+	const objectSize = 1024 // 1KB arrays
+	
+	fmt.Printf("Allocating %d objects of %d integers each...\n", numObjects, objectSize)
+	
+	// Slice to hold references to allocated objects
+	objects := make([]*[1024]int, numObjects)
+	
+	for i := 0; i < numObjects; i++ {
+		// Allocate on heap (arrays larger than ~64KB or when taking address)
+		objects[i] = new([1024]int)
+		// Initialize with some data
+		for j := 0; j < objectSize; j++ {
+			objects[i][j] = i + j
+		}
+	}
+	
+	fmt.Printf("Allocated %d objects (approximately %.2f MB)\n", 
+		numObjects, float64(numObjects*objectSize*8)/(1024*1024))
+	
+	// Print memory stats after allocation
+	var m2 runtime.MemStats
+	runtime.ReadMemStats(&m2)
+	fmt.Println("\n\n=== Memory Stats After Allocation ===")
+	printMemStats(&m2)
+	
+	fmt.Printf("\nMemory increase:\n")
+	fmt.Printf("  Alloc:      +%.2f MB\n", float64(m2.Alloc-m1.Alloc)/(1024*1024))
+	fmt.Printf("  TotalAlloc: +%.2f MB\n", float64(m2.TotalAlloc-m1.TotalAlloc)/(1024*1024))
+	fmt.Printf("  HeapAlloc:  +%.2f MB\n", float64(m2.HeapAlloc-m1.HeapAlloc)/(1024*1024))
+	
+	// Release references (make objects unreachable)
+	fmt.Println("\n\n=== Releasing References ===")
+	fmt.Println("Setting slice to nil to make objects unreachable...")
+	objects = nil
+	
+	// Trigger garbage collection
+	fmt.Println("\nManually triggering garbage collection...")
+	fmt.Println("(In practice, Go's GC runs automatically based on heap size)")
+	runtime.GC()
+	
+	// Wait for GC to complete
+	runtime.GC()
+	
+	// Print memory stats after GC
+	var m3 runtime.MemStats
+	runtime.ReadMemStats(&m3)
+	fmt.Println("\n\n=== Memory Stats After GC ===")
+	printMemStats(&m3)
+	
+	fmt.Printf("\nMemory after GC (vs after allocation):\n")
+	fmt.Printf("  Alloc:     %.2f MB (was %.2f MB, freed %.2f MB)\n", 
+		float64(m3.Alloc)/(1024*1024),
+		float64(m2.Alloc)/(1024*1024),
+		float64(m2.Alloc-m3.Alloc)/(1024*1024))
+	fmt.Printf("  HeapAlloc: %.2f MB (was %.2f MB, freed %.2f MB)\n",
+		float64(m3.HeapAlloc)/(1024*1024),
+		float64(m2.HeapAlloc)/(1024*1024),
+		float64(m2.HeapAlloc-m3.HeapAlloc)/(1024*1024))
+	
+	fmt.Println("\n\n=== Summary ===")
+	fmt.Println("Go's garbage collector automatically reclaimed the memory")
+	fmt.Println("once we removed all references to the allocated objects.")
+	fmt.Println("No manual free() calls needed like in C!")
+}
+
+func printMemStats(m *runtime.MemStats) {
+	fmt.Printf("  Alloc:       %10.2f MB (bytes allocated and still in use)\n", 
+		float64(m.Alloc)/(1024*1024))
+	fmt.Printf("  TotalAlloc:  %10.2f MB (total bytes allocated over time)\n", 
+		float64(m.TotalAlloc)/(1024*1024))
+	fmt.Printf("  Sys:         %10.2f MB (bytes obtained from OS)\n", 
+		float64(m.Sys)/(1024*1024))
+	fmt.Printf("  HeapAlloc:   %10.2f MB (bytes allocated on heap)\n", 
+		float64(m.HeapAlloc)/(1024*1024))
+	fmt.Printf("  HeapSys:     %10.2f MB (bytes obtained from OS for heap)\n", 
+		float64(m.HeapSys)/(1024*1024))
+	fmt.Printf("  NumGC:       %10d (number of completed GC cycles)\n", m.NumGC)
+}
+
