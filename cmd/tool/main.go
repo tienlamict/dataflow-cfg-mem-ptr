@@ -26,23 +26,18 @@ func main() {
 	switch subcommand {
 	case "dataflow":
 		fmt.Println("=== Running Dataflow Analysis (Reaching Definitions) ===")
-		fmt.Println()
 		dataflow.RunReachingDefinitions()
 	case "cfg":
 		fmt.Println("=== Running CFG Construction ===")
-		fmt.Println()
 		cfg.RunCFGDemo()
 	case "mem":
 		fmt.Println("=== Running Memory Allocation Demo ===")
-		fmt.Println()
 		mem.RunMemoryDemo()
 	case "ptr":
 		fmt.Println("=== Running Pointer and GC Demo ===")
-		fmt.Println()
 		ptr.RunPointerDemo()
 	default:
 		fmt.Printf("Unknown subcommand: %s\n\n", subcommand)
-		fmt.Println()
 		printUsage()
 		os.Exit(1)
 	}
