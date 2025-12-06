@@ -9,10 +9,7 @@ import (
 	"os"
 )
 
-// main - Hàm chính của chương trình CLI
-// Nhận subcommand từ command line và gọi module tương ứng
 func main() {
-	// Kiểm tra xem có đủ tham số không
 	if len(os.Args) < 2 {
 		printUsage()
 		os.Exit(1)
@@ -20,29 +17,22 @@ func main() {
 
 	subcommand := os.Args[1]
 
-	// Kiểm tra flag -help
-	// Nếu người dùng gõ: go run ./cmd/tool <subcommand> -help
 	if len(os.Args) > 2 && (os.Args[2] == "-help" || os.Args[2] == "--help") {
 		printSubcommandHelp(subcommand)
 		return
 	}
 
-	// Xử lý từng subcommand
 	switch subcommand {
 	case "dataflow":
-		// Chạy phân tích dataflow (reaching definitions)
 		fmt.Println("=== Running Dataflow Analysis (Reaching Definitions) ===")
 		dataflow.RunReachingDefinitions()
 	case "cfg":
-		// Chạy xây dựng CFG từ pseudo-code
 		fmt.Println("=== Running CFG Construction ===")
 		cfg.RunCFGDemo()
 	case "mem":
-		// Chạy demo quản lý bộ nhớ và garbage collection
 		fmt.Println("=== Running Memory Allocation Demo ===")
 		mem.RunMemoryDemo()
 	case "ptr":
-		// Chạy demo về pointer và automatic memory management
 		fmt.Println("=== Running Pointer and GC Demo ===")
 		ptr.RunPointerDemo()
 	default:
@@ -52,7 +42,6 @@ func main() {
 	}
 }
 
-// printUsage - In hướng dẫn sử dụng chung
 func printUsage() {
 	fmt.Println("Usage: go run ./cmd/tool <subcommand> [-help]")
 	fmt.Println("\nAvailable subcommands:")
@@ -63,7 +52,6 @@ func printUsage() {
 	fmt.Println("\nUse '<subcommand> -help' for more information about a subcommand.")
 }
 
-// printSubcommandHelp - In hướng dẫn chi tiết cho từng subcommand
 func printSubcommandHelp(subcommand string) {
 	switch subcommand {
 	case "dataflow":
